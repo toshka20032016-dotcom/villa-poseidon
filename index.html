@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Poseidon Villa — Тихая роскошь</title>
+  <meta name="description" content="Вилла Посейдон — Геленджик, ул. Жасминовая, 1. 161 м², подогреваемый бассейн, терраса и участок 600 м²." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            charcoal: {
+              DEFAULT: '#141414',
+              deep: '#0a0a0a',
+              soft: '#1c1c1c',
+            },
+            sand: '#c4b5a0',
+            mist: 'rgba(255,255,255,0.06)',
+          },
+          fontFamily: {
+            serif: ['"Cormorant Garamond"', 'Georgia', 'serif'],
+            sans: ['"DM Sans"', 'system-ui', 'sans-serif'],
+          },
+          letterSpacing: {
+            widest2: '0.35em',
+          },
+        },
+      },
+    };
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html {
+      scroll-behavior: auto;
+      background: #0a0a0a;
+    }
+
+    body {
+      margin: 0;
+      background: #141414;
+      color: rgba(255, 255, 255, 0.88);
+      font-family: 'DM Sans', system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    #loader {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.5rem;
+      background: #0a0a0a;
+      transition: opacity 0.8s ease, visibility 0.8s ease;
+    }
+
+    #loader.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .loader-line {
+      width: 120px;
+      height: 1px;
+      background: rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .loader-line::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      width: var(--progress, 0%);
+      background: linear-gradient(90deg, transparent, rgba(196, 181, 160, 0.9), transparent);
+      transition: width 0.15s ease;
+    }
+
+    #hero-canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .grid-overlay {
+      background-image:
+        linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+      background-size: 80px 80px;
+      mask-image: radial-gradient(ellipse 70% 60% at 50% 50%, black 20%, transparent 100%);
+    }
+
+    .text-panel {
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity 0.65s ease, transform 0.65s ease;
+      pointer-events: none;
+    }
+
+    .text-panel.active {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    .glass {
+      background: rgba(20, 20, 20, 0.45);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .feature-card {
+      background: linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      transition: border-color 0.4s ease, transform 0.4s ease;
+    }
+
+    .feature-card:hover {
+      border-color: rgba(196, 181, 160, 0.35);
+      transform: translateY(-4px);
+    }
+
+    .nav-link {
+      position: relative;
+    }
+
+    .nav-link::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      bottom: -4px;
+      width: 100%;
+      height: 1px;
+      background: rgba(196, 181, 160, 0.6);
+      transform: scaleX(0);
+      transform-origin: right;
+      transition: transform 0.35s ease;
+    }
+
+    .nav-link:hover::after {
+      transform: scaleX(1);
+      transform-origin: left;
+    }
+
+    .scroll-indicator span {
+      animation: pulse-line 2.2s ease-in-out infinite;
+    }
+
+    @keyframes pulse-line {
+      0%, 100% { opacity: 0.35; transform: scaleY(0.6); }
+      50% { opacity: 1; transform: scaleY(1); }
+    }
+
+    .form-input {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: rgba(255, 255, 255, 0.9);
+      padding: 0.875rem 1rem;
+      font-family: 'DM Sans', system-ui, sans-serif;
+      font-size: 0.875rem;
+      outline: none;
+      transition: border-color 0.3s ease, background 0.3s ease;
+    }
+
+    .form-input:focus {
+      border-color: rgba(196, 181, 160, 0.45);
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .form-input::placeholder {
+      color: rgba(255, 255, 255, 0.28);
+    }
+
+    @media (max-width: 768px) {
+      .grid-overlay { background-size: 48px 48px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Loader -->
+  <div id="loader" aria-live="polite" aria-busy="true">
+    <p class="font-sans text-[11px] uppercase tracking-widest2 text-white/50">Poseidon Villa</p>
+    <p id="loader-text" class="font-sans text-xs tracking-[0.25em] text-sand/80">LOADING... 0%</p>
+    <div class="loader-line" id="loader-bar" style="--progress: 0%"></div>
+  </div>
+
+  <!-- Header -->
+  <header class="fixed top-0 left-0 right-0 z-50 px-6 md:px-10 py-6 md:py-8">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <a href="#" class="font-serif text-xl md:text-2xl tracking-[0.22em] text-white/90">POSEIDON</a>
+      <nav class="hidden md:flex items-center gap-10 font-sans text-[11px] uppercase tracking-[0.2em] text-white/55">
+        <a href="#story" class="nav-link hover:text-white/90 transition-colors">История</a>
+        <a href="#features" class="nav-link hover:text-white/90 transition-colors">Резиденция</a>
+        <a href="#booking" class="nav-link hover:text-white/90 transition-colors">Бронирование</a>
+      </nav>
+      <a href="#booking" class="glass px-5 py-2.5 font-sans text-[10px] uppercase tracking-[0.22em] text-white/80 hover:text-white hover:border-white/20 transition-all">
+        Забронировать
+      </a>
+    </div>
+  </header>
+
+  <!-- Scrollytelling -->
+  <section id="story" class="relative">
+    <div id="scroll-container" class="relative h-[400vh]">
+      <div id="canvas-wrapper" class="sticky top-0 h-screen w-full overflow-hidden bg-charcoal-deep">
+        <canvas id="hero-canvas" aria-hidden="true"></canvas>
+
+        <!-- Grid & coordinates overlay -->
+        <div class="absolute inset-0 grid-overlay pointer-events-none"></div>
+        <div class="absolute top-28 left-6 md:left-10 font-sans text-[10px] tracking-[0.18em] text-white/30 uppercase pointer-events-none">
+          44°34'N · 38°04'E
+        </div>
+        <div class="absolute bottom-28 right-6 md:right-10 font-sans text-[10px] tracking-[0.18em] text-white/30 uppercase pointer-events-none text-right">
+          Gelendzhik · Black Sea
+        </div>
+
+        <!-- Scroll chapters -->
+        <div class="absolute inset-0 flex items-end md:items-center pb-28 md:pb-0 px-6 md:px-16 pointer-events-none">
+          <div class="max-w-3xl">
+
+            <article id="chapter-1" class="text-panel active">
+              <p class="font-sans text-[10px] uppercase tracking-[0.28em] text-sand/70 mb-4">01 — Утро</p>
+              <h1 class="font-serif text-4xl md:text-6xl lg:text-7xl font-light leading-[1.05] text-white mb-5">
+                Утро.<br />Пробуждение стихии.
+              </h1>
+              <p class="font-sans text-sm md:text-base font-light leading-relaxed text-white/55 max-w-md">
+                Геленджик просыпается. Утренний свет на террасе, аромат жасмина и тишина частной резиденции на ул. Жасминовая, 1.
+              </p>
+            </article>
+
+            <article id="chapter-2" class="text-panel">
+              <p class="font-sans text-[10px] uppercase tracking-[0.28em] text-sand/70 mb-4">02 — День</p>
+              <h2 class="font-serif text-4xl md:text-6xl lg:text-7xl font-light leading-[1.05] text-white mb-5">
+                День.<br />Настоящая роскошь в деталях.
+              </h2>
+              <p class="font-sans text-sm md:text-base font-light leading-relaxed text-white/55 max-w-md">
+                161 м² жилого пространства, гостиная с террасой, подогреваемый бассейн 7×3 м и участок 600 м² — всё для безмятежного дня.
+              </p>
+            </article>
+
+            <article id="chapter-3" class="text-panel">
+              <p class="font-sans text-[10px] uppercase tracking-[0.28em] text-sand/70 mb-4">03 — Вечер</p>
+              <h2 class="font-serif text-4xl md:text-6xl lg:text-7xl font-light leading-[1.05] text-white mb-5">
+                Вечер.<br />Ваша персональная резиденция.
+              </h2>
+              <p class="font-sans text-sm md:text-base font-light leading-relaxed text-white/55 max-w-md">
+                3 спальни, 3 санузла, мангал и парковка. Вечер у Чёрного моря — ваша персональная резиденция без компромиссов.
+              </p>
+            </article>
+
+            <article id="chapter-4" class="text-panel">
+              <p class="font-sans text-[10px] uppercase tracking-[0.28em] text-sand/70 mb-6">Poseidon Villa</p>
+              <h2 class="font-serif text-4xl md:text-5xl font-light text-white mb-8">
+                Готовы к вашему приезду.
+              </h2>
+              <a href="#booking" class="inline-flex glass px-8 py-4 font-sans text-[11px] uppercase tracking-[0.24em] text-white/90 hover:border-sand/40 transition-all pointer-events-auto">
+                Забронировать резиденцию
+              </a>
+            </article>
+
+          </div>
+        </div>
+
+        <!-- Scroll indicator -->
+        <div class="scroll-indicator absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 pointer-events-none">
+          <span class="block w-px h-10 bg-gradient-to-b from-transparent via-white/40 to-transparent origin-top"></span>
+          <span class="font-sans text-[9px] uppercase tracking-[0.3em] text-white/35">Scroll</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section id="features" class="relative bg-charcoal-deep py-24 md:py-32 px-6 md:px-10 border-t border-white/5">
+    <div class="max-w-6xl mx-auto">
+      <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-8 mb-16">
+        <div>
+          <p class="font-sans text-[10px] uppercase tracking-[0.28em] text-sand/60 mb-4">Резиденция</p>
+          <h2 class="font-serif text-3xl md:text-5xl font-light text-white">Характеристики</h2>
+        </div>
+        <p class="font-sans text-sm text-white/45 max-w-sm leading-relaxed">
+          Геленджик, ул. Жасминовая, 1 — частная вилла с бассейном и террасой у Чёрного моря.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
+        <article class="feature-card rounded-sm p-8">
+          <p class="font-serif text-4xl text-sand mb-3">161</p>
+          <p class="font-sans text-[10px] uppercase tracking-[0.2em] text-white/40 mb-2">м²</p>
+          <p class="font-sans text-sm text-white/55 leading-relaxed">Жилая площадь с гостиной и террасой</p>
+        </article>
+        <article class="feature-card rounded-sm p-8">
+          <p class="font-serif text-4xl text-sand mb-3">3+3</p>
+          <p class="font-sans text-[10px] uppercase tracking-[0.2em] text-white/40 mb-2">спальни · санузлы</p>
+          <p class="font-sans text-sm text-white/55 leading-relaxed">Три спальни и три санузла для комфорта семьи</p>
+        </article>
+        <article class="feature-card rounded-sm p-8">
+          <p class="font-serif text-4xl text-sand mb-3">7×3</p>
+          <p class="font-sans text-[10px] uppercase tracking-[0.2em] text-white/40 mb-2">бассейн</p>
+          <p class="font-sans text-sm text-white/55 leading-relaxed">Подогреваемый бассейн на участке 600 м²</p>
+        </article>
+        <article class="feature-card rounded-sm p-8">
+          <p class="font-serif text-4xl text-sand mb-3">BBQ</p>
+          <p class="font-sans text-[10px] uppercase tracking-[0.2em] text-white/40 mb-2">мангал · парковка</p>
+          <p class="font-sans text-sm text-white/55 leading-relaxed">Зона барбекю и парковка для гостей</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- Booking -->
+  <section id="booking" class="relative bg-charcoal py-24 md:py-32 px-6 md:px-10 border-t border-white/5">
+    <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-20">
+      <div>
+        <p class="font-sans text-[10px] uppercase tracking-[0.28em] text-sand/60 mb-4">Бронирование</p>
+        <h2 class="font-serif text-3xl md:text-5xl font-light text-white mb-6">Забронировать виллу</h2>
+        <p class="font-sans text-sm text-white/45 leading-relaxed mb-8 max-w-md">
+          Оставьте заявку — мы свяжемся с вами для подтверждения дат и условий проживания.
+        </p>
+        <div class="space-y-4 font-sans text-sm text-white/50">
+          <p><span class="text-white/30 uppercase text-[10px] tracking-[0.2em] block mb-1">Адрес</span>Геленджик, ул. Жасминовая, 1</p>
+          <p><span class="text-white/30 uppercase text-[10px] tracking-[0.2em] block mb-1">Телефон</span><a href="tel:+78622902700" class="text-white/70 hover:text-sand transition-colors">+7 (862) 290-27-00</a></p>
+          <p><span class="text-white/30 uppercase text-[10px] tracking-[0.2em] block mb-1">Email</span><a href="mailto:bron@burgas-sochi.ru" class="text-white/70 hover:text-sand transition-colors">bron@burgas-sochi.ru</a></p>
+        </div>
+      </div>
+
+      <form id="booking-form" class="glass rounded-sm p-8 md:p-10 space-y-5" action="mailto:bron@burgas-sochi.ru" method="post" enctype="text/plain">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div>
+            <label for="name" class="font-sans text-[10px] uppercase tracking-[0.2em] text-white/35 block mb-2">Имя</label>
+            <input type="text" id="name" name="name" required placeholder="Ваше имя" class="form-input rounded-sm" />
+          </div>
+          <div>
+            <label for="phone" class="font-sans text-[10px] uppercase tracking-[0.2em] text-white/35 block mb-2">Телефон</label>
+            <input type="tel" id="phone" name="phone" required placeholder="+7 (___) ___-__-__" class="form-input rounded-sm" />
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div>
+            <label for="checkin" class="font-sans text-[10px] uppercase tracking-[0.2em] text-white/35 block mb-2">Заезд</label>
+            <input type="date" id="checkin" name="checkin" required class="form-input rounded-sm" />
+          </div>
+          <div>
+            <label for="checkout" class="font-sans text-[10px] uppercase tracking-[0.2em] text-white/35 block mb-2">Выезд</label>
+            <input type="date" id="checkout" name="checkout" required class="form-input rounded-sm" />
+          </div>
+        </div>
+        <div>
+          <label for="guests" class="font-sans text-[10px] uppercase tracking-[0.2em] text-white/35 block mb-2">Гостей</label>
+          <input type="number" id="guests" name="guests" min="1" max="12" value="2" class="form-input rounded-sm" />
+        </div>
+        <div>
+          <label for="message" class="font-sans text-[10px] uppercase tracking-[0.2em] text-white/35 block mb-2">Комментарий</label>
+          <textarea id="message" name="message" rows="3" placeholder="Пожелания к проживанию" class="form-input rounded-sm resize-none"></textarea>
+        </div>
+        <button type="submit" class="w-full sm:w-auto glass px-10 py-4 font-sans text-[11px] uppercase tracking-[0.24em] text-white/90 hover:border-sand/40 transition-all cursor-pointer">
+          Отправить заявку
+        </button>
+        <p id="form-success" class="hidden font-sans text-sm text-sand/80">Спасибо! Заявка подготовлена — подтвердите отправку в почтовом клиенте.</p>
+      </form>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer id="contact" class="bg-charcoal-deep py-16 px-6 md:px-10 border-t border-white/5">
+    <div class="max-w-6xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-8">
+      <div>
+        <p class="font-serif text-2xl tracking-[0.18em] text-white mb-3">POSEIDON</p>
+        <p class="font-sans text-sm text-white/45">Геленджик, ул. Жасминовая, 1</p>
+        <p class="font-sans text-sm text-white/45 mt-1">
+          <a href="tel:+78622902700" class="hover:text-white/70 transition-colors">+7 (862) 290-27-00</a>
+          ·
+          <a href="mailto:bron@burgas-sochi.ru" class="hover:text-white/70 transition-colors">bron@burgas-sochi.ru</a>
+        </p>
+      </div>
+      <a href="#booking" class="inline-flex glass px-8 py-4 font-sans text-[11px] uppercase tracking-[0.24em] text-white/85 hover:border-sand/40 transition-all self-start md:self-auto">
+        Забронировать
+      </a>
+    </div>
+    <p class="max-w-6xl mx-auto mt-12 font-sans text-[10px] uppercase tracking-[0.2em] text-white/25">
+      © 2026 Villa Poseidon · Burgas Sochi
+    </p>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      gsap.registerPlugin(ScrollTrigger);
+
+      const FRAME_COUNT = 150;
+      const FRAME_PATH = (i) => `public/frames/frame_${String(i).padStart(3, '0')}.webp`;
+
+      const canvas = document.getElementById('hero-canvas');
+      const ctx = canvas.getContext('2d');
+      const loader = document.getElementById('loader');
+      const loaderText = document.getElementById('loader-text');
+      const loaderBar = document.getElementById('loader-bar');
+
+      const chapters = [
+        { el: document.getElementById('chapter-1'), start: 0, end: 0.25 },
+        { el: document.getElementById('chapter-2'), start: 0.25, end: 0.55 },
+        { el: document.getElementById('chapter-3'), start: 0.55, end: 0.85 },
+        { el: document.getElementById('chapter-4'), start: 0.85, end: 1.0 },
+      ];
+
+      const animation = { frame: 0 };
+      const images = new Array(FRAME_COUNT);
+      let loadedCount = 0;
+      let currentFrame = -1;
+      let dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+      function setLoaderProgress(pct) {
+        loaderText.textContent = `LOADING... ${pct}%`;
+        loaderBar.style.setProperty('--progress', `${pct}%`);
+      }
+
+      function preloadImages() {
+        return new Promise((resolve, reject) => {
+          let resolved = false;
+
+          for (let i = 1; i <= FRAME_COUNT; i++) {
+            const img = new Image();
+            img.decoding = 'async';
+            img.onload = () => {
+              loadedCount++;
+              setLoaderProgress(Math.round((loadedCount / FRAME_COUNT) * 100));
+              if (loadedCount === FRAME_COUNT && !resolved) {
+                resolved = true;
+                resolve();
+              }
+            };
+            img.onerror = () => {
+              if (!resolved) {
+                resolved = true;
+                reject(new Error(`Failed to load frame ${i}`));
+              }
+            };
+            img.src = FRAME_PATH(i);
+            images[i - 1] = img;
+          }
+        });
+      }
+
+      function resizeCanvas() {
+        dpr = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.floor(window.innerWidth * dpr);
+        canvas.height = Math.floor(window.innerHeight * dpr);
+        canvas.style.width = `${window.innerWidth}px`;
+        canvas.style.height = `${window.innerHeight}px`;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        renderFrame(animation.frame);
+      }
+
+      function renderFrame(index) {
+        const img = images[index];
+        if (!img || !img.complete || !img.naturalWidth) return;
+
+        const cw = window.innerWidth;
+        const ch = window.innerHeight;
+
+        ctx.clearRect(0, 0, cw, ch);
+
+        const scale = Math.max(cw / img.naturalWidth, ch / img.naturalHeight);
+        const w = img.naturalWidth * scale;
+        const h = img.naturalHeight * scale;
+        const x = (cw - w) / 2;
+        const y = (ch - h) / 2;
+
+        ctx.drawImage(img, x, y, w, h);
+
+        const gradient = ctx.createLinearGradient(0, 0, 0, ch);
+        gradient.addColorStop(0, 'rgba(10,10,10,0.35)');
+        gradient.addColorStop(0.45, 'rgba(10,10,10,0.05)');
+        gradient.addColorStop(1, 'rgba(10,10,10,0.55)');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, cw, ch);
+      }
+
+      function updateChapters(progress) {
+        chapters.forEach(({ el, start, end }) => {
+          const active = progress >= start && progress < end;
+          el.classList.toggle('active', active);
+        });
+        if (progress >= 0.999) {
+          chapters.forEach(({ el }, idx) => {
+            el.classList.toggle('active', idx === chapters.length - 1);
+          });
+        }
+      }
+
+      function initScroll() {
+        ScrollTrigger.create({
+          trigger: '#scroll-container',
+          start: 'top top',
+          end: 'bottom bottom',
+          scrub: 1,
+          onUpdate: (self) => {
+            const frame = Math.min(FRAME_COUNT - 1, Math.round(self.progress * (FRAME_COUNT - 1)));
+            if (frame !== currentFrame) {
+              currentFrame = frame;
+              animation.frame = frame;
+              renderFrame(frame);
+            }
+            updateChapters(self.progress);
+          },
+        });
+
+        renderFrame(0);
+        updateChapters(0);
+      }
+
+      async function boot() {
+        try {
+          await preloadImages();
+          loader.classList.add('hidden');
+          loader.setAttribute('aria-busy', 'false');
+          resizeCanvas();
+          initScroll();
+        } catch (err) {
+          loaderText.textContent = 'Ошибка загрузки кадров';
+          console.error(err);
+        }
+      }
+
+      let resizeTimer;
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(resizeCanvas, 120);
+      });
+
+      boot();
+
+      document.getElementById('booking-form').addEventListener('submit', function (e) {
+        e.preventDefault();
+        const form = e.target;
+        const data = new FormData(form);
+        const subject = encodeURIComponent('Бронирование Villa Poseidon');
+        const body = encodeURIComponent(
+          `Имя: ${data.get('name')}\n` +
+          `Телефон: ${data.get('phone')}\n` +
+          `Заезд: ${data.get('checkin')}\n` +
+          `Выезд: ${data.get('checkout')}\n` +
+          `Гостей: ${data.get('guests')}\n` +
+          `Комментарий: ${data.get('message') || '—'}`
+        );
+        window.location.href = `mailto:bron@burgas-sochi.ru?subject=${subject}&body=${body}`;
+        document.getElementById('form-success').classList.remove('hidden');
+      });
+    })();
+  </script>
+</body>
+</html>
