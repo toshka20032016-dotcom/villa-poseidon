@@ -93,6 +93,64 @@
     .scroll-indicator span {
       animation: pulse-line 2.2s ease-in-out infinite;
     }
+
+    .time-btn.active { color: #fff; }
+
+    .blueprint-zone {
+      fill: transparent;
+      stroke: rgba(255,255,255,0.12);
+      stroke-width: 1;
+      transition: fill 0.45s ease, stroke 0.45s ease;
+      cursor: pointer;
+    }
+
+    .blueprint-zone:hover,
+    .blueprint-zone.active {
+      fill: rgba(255,255,255,0.06);
+      stroke: rgba(255,255,255,0.55);
+    }
+
+    .zone-trigger.active {
+      border-color: #fff;
+    }
+
+    .zone-trigger.active h4 { color: #fff; }
+
+    .date-strip {
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+
+    .date-strip::-webkit-scrollbar { display: none; }
+
+    .date-cell {
+      flex: 0 0 auto;
+      min-width: 3.25rem;
+      padding: 0.75rem 0.5rem;
+      text-align: center;
+      border: 1px solid transparent;
+      border-radius: 2px;
+      cursor: pointer;
+      transition: border-color 0.3s, background 0.3s, box-shadow 0.3s;
+    }
+
+    .date-cell:hover { border-color: rgba(255,255,255,0.15); }
+
+    .date-cell.selected {
+      border-color: #fff;
+      background: rgba(255,255,255,0.06);
+      box-shadow: 0 0 20px rgba(255,255,255,0.08);
+    }
+
+    .date-cell.in-range {
+      border-color: rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.03);
+    }
+
+    .date-cell.disabled {
+      opacity: 0.25;
+      pointer-events: none;
+    }
   </style>
 </head>
 <body>
@@ -123,16 +181,31 @@
       <div class="absolute inset-0 bg-gradient-to-t from-charcoal-900 via-transparent to-charcoal-900/50 pointer-events-none"></div>
 
       <!-- Header -->
-      <header class="absolute top-0 left-0 w-full p-6 md:p-8 flex justify-between items-center z-10 max-w-7xl mx-auto left-1/2 -translate-x-1/2">
-        <a href="#" class="font-serif text-xl tracking-[0.3em] font-light text-white">POSEIDON</a>
-        <nav class="hidden md:flex space-x-12 font-sans text-xs uppercase tracking-widest text-neutral-400">
-          <a href="#about" class="hover:text-white transition-colors">О вилле</a>
-          <a href="#amenities" class="hover:text-white transition-colors">Привилегии</a>
-          <a href="#booking" class="hover:text-white transition-colors">Контакты</a>
-        </nav>
-        <a href="#booking" class="border border-neutral-700 px-5 py-2 font-sans text-xs uppercase tracking-widest text-white hover:bg-white hover:text-charcoal-900 transition-all duration-300">
-          Визит
-        </a>
+      <header class="absolute top-0 left-0 w-full p-6 md:p-8 z-10 max-w-7xl mx-auto left-1/2 -translate-x-1/2">
+        <div class="flex justify-between items-center gap-4">
+          <a href="#" class="font-serif text-xl tracking-[0.3em] font-light text-white shrink-0">POSEIDON</a>
+
+          <nav class="hidden md:flex space-x-10 font-sans text-xs uppercase tracking-widest text-neutral-400">
+            <a href="#floorplan" class="hover:text-white transition-colors">План</a>
+            <a href="#amenities" class="hover:text-white transition-colors">Привилегии</a>
+            <a href="#booking" class="hover:text-white transition-colors">Контакты</a>
+          </nav>
+
+          <div class="flex items-center gap-3 md:gap-4">
+            <!-- Ambient Switcher -->
+            <div class="hidden lg:flex items-center space-x-3 border border-neutral-800/60 px-3 py-1.5 backdrop-blur-md bg-charcoal-900/30">
+              <button type="button" data-frame="1" class="time-btn font-sans text-[10px] tracking-widest text-neutral-400 hover:text-white uppercase transition-colors active">Morning</button>
+              <span class="text-neutral-700">/</span>
+              <button type="button" data-frame="75" class="time-btn font-sans text-[10px] tracking-widest text-neutral-400 hover:text-white uppercase transition-colors">Noon</button>
+              <span class="text-neutral-700">/</span>
+              <button type="button" data-frame="145" class="time-btn font-sans text-[10px] tracking-widest text-neutral-400 hover:text-white uppercase transition-colors">Night</button>
+            </div>
+
+            <a href="#booking" class="border border-neutral-700 px-4 md:px-5 py-2 font-sans text-[10px] md:text-xs uppercase tracking-widest text-white hover:bg-white hover:text-charcoal-900 transition-all duration-300 shrink-0">
+              Визит
+            </a>
+          </div>
+        </div>
       </header>
 
       <!-- Глава 1: Утро -->
@@ -184,6 +257,16 @@
         44.5611° N, 38.0869° E // GELENDZHIK
       </div>
 
+      <!-- Ambient Sound -->
+      <div class="absolute bottom-8 right-6 md:right-8 z-20 flex items-center space-x-2 pointer-events-auto">
+        <button type="button" id="sound-toggle" class="font-sans text-[10px] tracking-widest text-neutral-400 hover:text-white uppercase transition-colors">
+          Sound: Off
+        </button>
+      </div>
+      <audio id="ambient-audio" loop preload="none">
+        <source src="https://assets.mixkit.co/active_storage/sfx/2568/2568-84.wav" type="audio/wav" />
+      </audio>
+
       <!-- Scroll indicator -->
       <div class="scroll-indicator absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 pointer-events-none">
         <span class="block w-px h-10 bg-gradient-to-b from-transparent via-neutral-500/40 to-transparent origin-top"></span>
@@ -192,8 +275,62 @@
     </div>
   </div>
 
-  <!-- О вилле (якорь) -->
-  <section id="about" class="sr-only" aria-hidden="true"></section>
+  <!-- План резиденции -->
+  <section id="floorplan" class="bg-charcoal-900 py-32 px-8 border-t border-neutral-900/50">
+    <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
+
+      <div class="lg:col-span-5">
+        <span class="font-sans text-xs uppercase tracking-[0.4em] text-neutral-500 block mb-4">Архитектура</span>
+        <h2 class="font-serif text-4xl text-white font-light mb-6">
+          Продуманность <br><span class="italic text-neutral-400">каждого</span> метра
+        </h2>
+        <p class="font-sans text-sm text-neutral-400 leading-relaxed mb-8">
+          161 м² разделены на приватные и общие зоны. До 8 гостей — без ощущения тесноты.
+        </p>
+        <p id="zone-detail" class="font-sans text-xs text-neutral-500 leading-relaxed mb-8 min-h-[3rem]">
+          Наведите на зону планировки или выберите пункт слева.
+        </p>
+
+        <div class="space-y-3">
+          <div class="zone-trigger group border-l-2 border-neutral-800 hover:border-white transition-colors pl-4 py-1 cursor-pointer" data-zone="living">
+            <h4 class="font-serif text-lg text-neutral-400 group-hover:text-white transition-colors">01 / Гостиная с террасой</h4>
+            <p class="font-sans text-[11px] text-neutral-600 mt-1 hidden group-hover:block">48 м² · выход к бассейну</p>
+          </div>
+          <div class="zone-trigger group border-l-2 border-neutral-800 hover:border-white transition-colors pl-4 py-1 cursor-pointer" data-zone="bedrooms">
+            <h4 class="font-serif text-lg text-neutral-400 group-hover:text-white transition-colors">02 / Приватные спальни</h4>
+            <p class="font-sans text-[11px] text-neutral-600 mt-1 hidden group-hover:block">3 спальни · 3 санузла</p>
+          </div>
+          <div class="zone-trigger group border-l-2 border-neutral-800 hover:border-white transition-colors pl-4 py-1 cursor-pointer" data-zone="terrace">
+            <h4 class="font-serif text-lg text-neutral-400 group-hover:text-white transition-colors">03 / Терраса &amp; мангал</h4>
+            <p class="font-sans text-[11px] text-neutral-600 mt-1 hidden group-hover:block">Открытая зона отдыха · BBQ</p>
+          </div>
+          <div class="zone-trigger group border-l-2 border-neutral-800 hover:border-white transition-colors pl-4 py-1 cursor-pointer" data-zone="pool">
+            <h4 class="font-serif text-lg text-neutral-400 group-hover:text-white transition-colors">04 / Бассейн 7×3 м</h4>
+            <p class="font-sans text-[11px] text-neutral-600 mt-1 hidden group-hover:block">Подогрев · участок 600 м²</p>
+          </div>
+        </div>
+      </div>
+
+      <div id="blueprint-panel" class="lg:col-span-7 bg-charcoal-800/20 border border-neutral-800/40 p-6 md:p-10 aspect-video relative backdrop-blur-sm">
+        <svg viewBox="0 0 420 260" class="w-full h-full" aria-label="Планировка виллы">
+          <rect x="1" y="1" width="418" height="258" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+          <rect data-zone="living" class="blueprint-zone" x="24" y="32" width="180" height="120" rx="2"/>
+          <text x="114" y="98" text-anchor="middle" fill="rgba(255,255,255,0.25)" font-family="Inter,sans-serif" font-size="11" letter-spacing="2">ГОСТИНАЯ</text>
+          <rect data-zone="bedrooms" class="blueprint-zone" x="220" y="32" width="176" height="120" rx="2"/>
+          <text x="308" y="88" text-anchor="middle" fill="rgba(255,255,255,0.25)" font-family="Inter,sans-serif" font-size="10" letter-spacing="1">СПАЛЬНИ</text>
+          <text x="308" y="104" text-anchor="middle" fill="rgba(255,255,255,0.18)" font-family="Inter,sans-serif" font-size="9">3 + 3 с/у</text>
+          <rect data-zone="terrace" class="blueprint-zone" x="24" y="168" width="180" height="68" rx="2"/>
+          <text x="114" y="208" text-anchor="middle" fill="rgba(255,255,255,0.25)" font-family="Inter,sans-serif" font-size="10" letter-spacing="2">ТЕРРАСА</text>
+          <rect data-zone="pool" class="blueprint-zone" x="220" y="168" width="176" height="68" rx="2"/>
+          <text x="308" y="208" text-anchor="middle" fill="rgba(255,255,255,0.25)" font-family="Inter,sans-serif" font-size="10" letter-spacing="2">БАССЕЙН</text>
+        </svg>
+        <div id="blueprint-display" class="absolute bottom-6 left-6 right-6 font-serif text-lg md:text-2xl text-neutral-600 italic tracking-wide transition-all duration-500 pointer-events-none">
+          Выберите зону
+        </div>
+      </div>
+
+    </div>
+  </section>
 
   <!-- Характеристики -->
   <section id="amenities" class="relative z-10 bg-charcoal-900 py-32 px-8 border-t border-neutral-900">
@@ -256,15 +393,18 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div class="border-b border-neutral-800 focus-within:border-white transition-colors pb-2">
-            <label for="checkin" class="font-sans text-[10px] uppercase tracking-widest text-neutral-500 block mb-1">Заезд</label>
-            <input type="date" id="checkin" name="checkin" required class="w-full bg-transparent text-white font-sans text-sm focus:outline-none" />
+        <!-- Календарь доступности -->
+        <div class="rounded-sm border border-neutral-800/50 bg-charcoal-800/20 backdrop-blur-md p-6 md:p-8">
+          <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
+            <div>
+              <p class="font-sans text-[10px] uppercase tracking-widest text-neutral-500 mb-2">Даты проживания</p>
+              <p id="date-summary" class="font-serif text-xl text-white font-light">Выберите заезд и выезд</p>
+            </div>
+            <p id="date-hint" class="font-sans text-[10px] uppercase tracking-widest text-neutral-600">Шаг 1 — заезд</p>
           </div>
-          <div class="border-b border-neutral-800 focus-within:border-white transition-colors pb-2">
-            <label for="checkout" class="font-sans text-[10px] uppercase tracking-widest text-neutral-500 block mb-1">Выезд</label>
-            <input type="date" id="checkout" name="checkout" required class="w-full bg-transparent text-white font-sans text-sm focus:outline-none" />
-          </div>
+          <div id="date-strip" class="date-strip flex gap-2 overflow-x-auto pb-2" role="listbox" aria-label="Выбор дат"></div>
+          <input type="hidden" id="checkin" name="checkin" required />
+          <input type="hidden" id="checkout" name="checkout" required />
         </div>
 
         <div class="border-b border-neutral-800 focus-within:border-white transition-colors pb-2 max-w-xs">
@@ -302,11 +442,14 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollToPlugin.min.js"></script>
   <script>
     (function () {
       'use strict';
 
-      gsap.registerPlugin(ScrollTrigger);
+      gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
+
+      const frameCount = 150;
 
       const canvas = document.getElementById('hero-canvas');
       const context = canvas.getContext('2d');
@@ -314,7 +457,6 @@
       const loaderText = document.getElementById('loader-text');
       const loaderBar = document.getElementById('loader-bar');
 
-      const frameCount = 150;
       const currentFramePath = (index) =>
         `public/frames/frame_${String(index).padStart(3, '0')}.webp`;
 
@@ -391,7 +533,14 @@
             start: 'top top',
             end: 'bottom bottom',
             scrub: 1,
-            onUpdate: (self) => updateTextBlocks(self.progress),
+            onUpdate: (self) => {
+              updateTextBlocks(self.progress);
+              const frame = Math.round(self.progress * (frameCount - 1));
+              document.querySelectorAll('.time-btn').forEach((btn) => {
+                const f = Number(btn.dataset.frame);
+                btn.classList.toggle('active', Math.abs(frame - f) < 12);
+              });
+            },
           },
           onUpdate: render,
         });
@@ -436,6 +585,11 @@
       document.getElementById('booking-form').addEventListener('submit', (e) => {
         e.preventDefault();
         const data = new FormData(e.target);
+        if (!data.get('checkin') || !data.get('checkout')) {
+          document.getElementById('date-hint').textContent = 'Выберите обе даты';
+          document.getElementById('date-hint').classList.add('text-red-400/80');
+          return;
+        }
         const subject = encodeURIComponent('Бронирование Villa Poseidon');
         const body = encodeURIComponent(
           `Имя: ${data.get('name')}\n` +
@@ -448,6 +602,186 @@
         window.location.href = `mailto:bron@burgas-sochi.ru?subject=${subject}&body=${body}`;
         document.getElementById('form-success').classList.remove('hidden');
       });
+
+      /* ── Ambient Switcher ── */
+      function goToTime(frameIndex) {
+        const container = document.getElementById('scrollytelling-container');
+        const totalHeight = container.scrollHeight - window.innerHeight;
+        const targetScroll = (frameIndex / frameCount) * totalHeight;
+
+        document.querySelectorAll('.time-btn').forEach((btn) => {
+          btn.classList.toggle('active', Number(btn.dataset.frame) === frameIndex);
+        });
+
+        gsap.to(window, {
+          scrollTo: { y: targetScroll, autoKill: true },
+          duration: 1.5,
+          ease: 'power2.inOut',
+        });
+      }
+
+      document.querySelectorAll('.time-btn').forEach((btn) => {
+        btn.addEventListener('click', () => goToTime(Number(btn.dataset.frame)));
+      });
+
+      /* ── Ambient Sound ── */
+      let soundOn = false;
+      const ambientAudio = document.getElementById('ambient-audio');
+      ambientAudio.volume = 0.15;
+
+      document.getElementById('sound-toggle').addEventListener('click', () => {
+        const btn = document.getElementById('sound-toggle');
+        if (!soundOn) {
+          ambientAudio.play().catch(() => {});
+          btn.textContent = 'Sound: On';
+          btn.classList.remove('text-neutral-400');
+          btn.classList.add('text-emerald-400/90');
+        } else {
+          ambientAudio.pause();
+          btn.textContent = 'Sound: Off';
+          btn.classList.remove('text-emerald-400/90');
+          btn.classList.add('text-neutral-400');
+        }
+        soundOn = !soundOn;
+      });
+
+      /* ── Floor Plan ── */
+      const zoneCopy = {
+        living: {
+          title: 'Гостиная & выход к бассейну',
+          detail: '48 м² · зона отдыха с панорамным выходом на террасу и бассейн.',
+        },
+        bedrooms: {
+          title: '3 спальни / 3 санузла',
+          detail: 'Спальня 1 — 24 м² · Спальня 2 — 18 м² · Спальня 3 — 16 м². Каждая с en-suite.',
+        },
+        terrace: {
+          title: 'Терраса & зона BBQ',
+          detail: 'Открытая терраса с мангалом и видом на участок 600 м².',
+        },
+        pool: {
+          title: 'Бассейн 7×3 м',
+          detail: 'Подогреваемый бассейн — комфортный отдых в любой сезон.',
+        },
+      };
+
+      function highlightZone(zone) {
+        const copy = zoneCopy[zone];
+        if (!copy) return;
+
+        document.getElementById('blueprint-display').textContent = copy.title;
+        document.getElementById('blueprint-display').classList.remove('text-neutral-600');
+        document.getElementById('blueprint-display').classList.add('text-white');
+        document.getElementById('zone-detail').textContent = copy.detail;
+
+        document.querySelectorAll('.zone-trigger').forEach((el) => {
+          el.classList.toggle('active', el.dataset.zone === zone);
+        });
+        document.querySelectorAll('.blueprint-zone').forEach((el) => {
+          el.classList.toggle('active', el.dataset.zone === zone);
+        });
+      }
+
+      document.querySelectorAll('[data-zone]').forEach((el) => {
+        el.addEventListener('mouseenter', () => highlightZone(el.dataset.zone));
+      });
+
+      document.getElementById('blueprint-panel').addEventListener('mouseleave', () => {
+        document.getElementById('blueprint-display').textContent = 'Выберите зону';
+        document.getElementById('blueprint-display').classList.add('text-neutral-600');
+        document.getElementById('blueprint-display').classList.remove('text-white');
+        document.getElementById('zone-detail').textContent = 'Наведите на зону планировки или выберите пункт слева.';
+        document.querySelectorAll('.zone-trigger, .blueprint-zone').forEach((el) => el.classList.remove('active'));
+      });
+
+      /* ── Date Strip Calendar ── */
+      const dateStrip = document.getElementById('date-strip');
+      const checkinInput = document.getElementById('checkin');
+      const checkoutInput = document.getElementById('checkout');
+      const dateSummary = document.getElementById('date-summary');
+      const dateHint = document.getElementById('date-hint');
+
+      let checkinDate = null;
+      let checkoutDate = null;
+      let pickStep = 'checkin';
+
+      const MONTHS = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+      const DAYS = ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
+
+      function fmtISO(d) {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+      }
+
+      function fmtHuman(d) {
+        return `${d.getDate()} ${MONTHS[d.getMonth()]}`;
+      }
+
+      function buildDateStrip() {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        for (let i = 0; i < 60; i++) {
+          const d = new Date(today);
+          d.setDate(today.getDate() + i);
+
+          const cell = document.createElement('button');
+          cell.type = 'button';
+          cell.className = 'date-cell';
+          cell.dataset.date = fmtISO(d);
+          cell.innerHTML =
+            `<span class="block font-sans text-[9px] uppercase tracking-wider text-neutral-600">${DAYS[d.getDay()]}</span>` +
+            `<span class="block font-serif text-lg text-neutral-300 mt-1">${d.getDate()}</span>` +
+            `<span class="block font-sans text-[9px] text-neutral-600 mt-0.5">${MONTHS[d.getMonth()]}</span>`;
+
+          cell.addEventListener('click', () => selectDate(d, cell));
+          dateStrip.appendChild(cell);
+        }
+      }
+
+      function refreshDateCells() {
+        document.querySelectorAll('.date-cell').forEach((cell) => {
+          const iso = cell.dataset.date;
+          cell.classList.remove('selected', 'in-range', 'disabled');
+
+          if (checkinDate && checkoutDate) {
+            const t = new Date(iso);
+            if (iso === fmtISO(checkinDate) || iso === fmtISO(checkoutDate)) {
+              cell.classList.add('selected');
+            } else if (t > checkinDate && t < checkoutDate) {
+              cell.classList.add('in-range');
+            }
+          } else if (checkinDate && iso === fmtISO(checkinDate)) {
+            cell.classList.add('selected');
+          }
+        });
+      }
+
+      function selectDate(d, cell) {
+        dateHint.classList.remove('text-red-400/80');
+
+        if (pickStep === 'checkin' || !checkinDate || d <= checkinDate) {
+          checkinDate = d;
+          checkoutDate = null;
+          pickStep = 'checkout';
+          checkinInput.value = fmtISO(d);
+          checkoutInput.value = '';
+          dateHint.textContent = 'Шаг 2 — выезд';
+          dateSummary.textContent = `Заезд: ${fmtHuman(d)} — выберите выезд`;
+        } else {
+          checkoutDate = d;
+          pickStep = 'checkin';
+          checkoutInput.value = fmtISO(d);
+          dateHint.textContent = 'Даты выбраны';
+          dateSummary.textContent = `${fmtHuman(checkinDate)} → ${fmtHuman(checkoutDate)}`;
+        }
+
+        refreshDateCells();
+      }
+
+      buildDateStrip();
     })();
   </script>
 </body>
