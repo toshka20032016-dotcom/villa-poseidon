@@ -111,19 +111,127 @@
     }
     .adv-zone-trigger:hover::before,
     .adv-zone-trigger.active::before { transform: scaleY(1); }
+    .adv-zone-trigger:hover h4,
     .adv-zone-trigger.active h4 { color: #fff; }
 
     .btn-floor { transition: color 0.3s, border-color 0.3s; }
     .btn-floor.active { color: #fff; border-color: #fff; }
 
-    #adv-blueprint-panel { overflow: hidden; transform-origin: center center; }
+    #adv-blueprint-panel { overflow: hidden; }
+    #blueprint-wrapper {
+      width: 100%;
+      height: 100%;
+      transform-origin: center center;
+      transition: transform 0.25s ease;
+    }
+    #architect-blueprint { max-height: min(70vh, 520px); }
 
-    .adv-poly {
-      fill: rgba(255,255,255,0);
+    .architect-line { vector-effect: non-scaling-stroke; }
+
+    .interactive-poly {
+      fill: white;
+      fill-opacity: 0;
       stroke: rgba(255,255,255,0.08);
       stroke-width: 1;
       cursor: pointer;
-      transition: fill 0.35s ease;
+      transition: fill-opacity 0.35s ease;
+    }
+    .interactive-poly:hover,
+    .interactive-poly.active { fill-opacity: 0.05; }
+    .interactive-poly:focus-visible {
+      outline: 1px solid #fff;
+      outline-offset: -4px;
+    }
+
+    .zoom-controls {
+      position: absolute;
+      top: 0.75rem;
+      right: 0.75rem;
+      z-index: 10;
+      display: flex;
+      gap: 0.25rem;
+      background: rgba(18,18,18,0.85);
+      border: 1px solid rgba(255,255,255,0.08);
+      backdrop-filter: blur(8px);
+    }
+    .zoom-btn {
+      width: 2rem;
+      height: 2rem;
+      font-family: ui-monospace, monospace;
+      font-size: 0.875rem;
+      color: rgba(255,255,255,0.6);
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      transition: color 0.2s, background 0.2s;
+    }
+    .zoom-btn:hover { color: #fff; background: rgba(255,255,255,0.06); }
+    .zoom-btn:focus-visible { outline: 1px solid #fff; outline-offset: -2px; }
+    .zoom-btn-reset { font-size: 0.5rem; letter-spacing: 0.05em; }
+
+    /* Investment metrics */
+    .metric-card {
+      flex: 1;
+      min-width: 0;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(26,26,26,0.5);
+      padding: 1.25rem 1.5rem;
+      cursor: pointer;
+      transition: border-color 0.3s, background 0.3s;
+    }
+    .metric-card:hover,
+    .metric-card.expanded { border-color: rgba(255,255,255,0.2); background: rgba(38,38,38,0.4); }
+    .metric-card:focus-visible { outline: 1px solid #fff; outline-offset: 2px; }
+    .metric-explanation {
+      max-height: 0;
+      overflow: hidden;
+      opacity: 0;
+      transition: max-height 0.4s ease, opacity 0.35s ease, margin 0.35s ease;
+      margin-top: 0;
+    }
+    .metric-card.expanded .metric-explanation {
+      max-height: 8rem;
+      opacity: 1;
+      margin-top: 0.75rem;
+    }
+
+    /* Villa loader silhouette */
+    #loader-villa { width: 160px; height: auto; }
+    #loader-villa-path {
+      fill: none;
+      stroke: rgba(255,255,255,0.35);
+      stroke-width: 1.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      transition: stroke-dashoffset 0.15s ease;
+    }
+    #loader-villa-fill {
+      fill: rgba(255,255,255,0.04);
+      clip-path: inset(100% 0 0 0);
+      transition: clip-path 0.15s ease;
+    }
+
+    /* Concierge */
+    #concierge-tooltip {
+      position: absolute;
+      bottom: calc(100% + 0.75rem);
+      right: 0;
+      width: 14rem;
+      padding: 0.75rem 1rem;
+      background: #1a1a1a;
+      border: 1px solid rgba(255,255,255,0.1);
+      font-size: 0.6875rem;
+      line-height: 1.5;
+      color: rgba(255,255,255,0.55);
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(4px);
+      transition: opacity 0.25s, transform 0.25s;
+    }
+    #concierge-wrap:hover #concierge-tooltip,
+    #concierge-wrap:focus-within #concierge-tooltip {
+      opacity: 1;
+      transform: translateY(0);
     }
 
     #evening-glow {
@@ -182,12 +290,13 @@
 <body>
 
   <!-- Прелоадер -->
-  <div id="preloader" class="fixed inset-0 z-50 bg-charcoal-900 flex flex-col items-center justify-center gap-4" aria-live="polite" aria-busy="true">
+  <div id="preloader" class="fixed inset-0 z-50 bg-charcoal-900 flex flex-col items-center justify-center gap-5" aria-live="polite" aria-busy="true">
+    <svg id="loader-villa" viewBox="0 0 200 120" aria-hidden="true">
+      <path id="loader-villa-fill" d="M20 95 L20 55 L50 35 L100 20 L150 35 L180 55 L180 95 Z M70 95 L70 70 L130 70 L130 95 Z"/>
+      <path id="loader-villa-path" d="M20 95 L20 55 L50 35 L100 20 L150 35 L180 55 L180 95 L20 95 M70 95 L70 70 L130 70 L130 95"/>
+    </svg>
     <p class="font-serif text-lg tracking-[0.3em] text-white/60 font-light">POSEIDON</p>
-    <span id="loader-text" class="font-sans text-xs tracking-widest text-neutral-500">LOADING... 0%</span>
-    <div class="w-[120px] h-px bg-neutral-800 overflow-hidden relative">
-      <div id="loader-bar" class="h-full bg-gradient-to-r from-transparent via-neutral-400 to-transparent transition-all duration-150" style="width: 0%"></div>
-    </div>
+    <span id="loader-text" class="font-sans text-[10px] tracking-widest text-neutral-600">0%</span>
   </div>
 
   <!-- Scrollytelling -->
@@ -331,6 +440,12 @@
         </div>
 
         <div id="adv-blueprint-panel" class="lg:col-span-8 bg-[#0e0e0e] border border-neutral-800/50 p-4 md:p-8 relative aspect-[4/3]">
+          <div class="zoom-controls" role="toolbar" aria-label="Масштаб плана">
+            <button type="button" id="zoom-in" class="zoom-btn" aria-label="Увеличить план">+</button>
+            <button type="button" id="zoom-out" class="zoom-btn" aria-label="Уменьшить план">−</button>
+            <button type="button" id="zoom-reset" class="zoom-btn zoom-btn-reset" aria-label="Сбросить масштаб">RESET</button>
+          </div>
+          <div id="blueprint-wrapper">
           <svg id="architect-blueprint" viewBox="0 0 600 450" class="w-full h-full" aria-label="Архитектурный план виллы">
             <defs>
               <pattern id="blueprint-grid" width="20" height="20" patternUnits="userSpaceOnUse">
@@ -351,14 +466,14 @@
             <line x1="566" y1="400" x2="578" y2="400" stroke="rgba(255,255,255,0.2)" stroke-width="0.75"/>
             <text x="588" y="228" text-anchor="middle" fill="rgba(255,255,255,0.35)" font-family="ui-monospace, monospace" font-size="10" letter-spacing="1" transform="rotate(90 588 228)">11.20 m</text>
 
-            <g id="structural-walls" stroke="#ffffff" stroke-width="3" fill="none" stroke-linecap="square">
+            <g id="structural-walls" class="architect-line" stroke="#ffffff" stroke-width="3" fill="none" stroke-linecap="square" vector-effect="non-scaling-stroke">
               <rect x="50" y="50" width="500" height="350"/>
               <line x1="50" y1="200" x2="550" y2="200"/>
               <line x1="320" y1="50" x2="320" y2="400"/>
               <line x1="320" y1="280" x2="550" y2="280"/>
             </g>
 
-            <g id="interior-partitions" stroke="rgba(255,255,255,0.45)" stroke-width="1.5" fill="none">
+            <g id="interior-partitions" class="architect-line" stroke="rgba(255,255,255,0.45)" stroke-width="1.5" fill="none" vector-effect="non-scaling-stroke">
               <line x1="50" y1="130" x2="320" y2="130"/>
               <line x1="180" y1="130" x2="180" y2="200"/>
               <line x1="320" y1="130" x2="320" y2="200"/>
@@ -366,7 +481,7 @@
               <line x1="320" y1="340" x2="550" y2="340"/>
             </g>
 
-            <g id="furniture-schematics" stroke="rgba(255,255,255,0.18)" stroke-width="1" fill="none">
+            <g id="furniture-schematics" class="architect-line" stroke="rgba(255,255,255,0.18)" stroke-width="1" fill="none" vector-effect="non-scaling-stroke">
               <!-- Living: sofa -->
               <rect x="70" y="220" width="90" height="36" rx="1"/>
               <line x1="70" y1="232" x2="160" y2="232"/>
@@ -386,9 +501,9 @@
             </g>
 
             <!-- Interactive zones -->
-            <path id="adv-poly-living" class="adv-poly" fill="white" fill-opacity="0" d="M 52 52 L 318 52 L 318 198 L 182 198 L 182 132 L 52 132 Z"/>
-            <path id="adv-poly-kitchen" class="adv-poly" fill="white" fill-opacity="0" d="M 322 52 L 548 52 L 548 198 L 322 198 Z"/>
-            <path id="adv-poly-master" class="adv-poly" fill="white" fill-opacity="0" d="M 322 202 L 548 202 L 548 398 L 322 398 Z"/>
+            <path id="adv-poly-living" class="interactive-poly" data-advzone="living" role="button" tabindex="0" aria-label="Гостиная — 65 м², панорамные окна, терраса" d="M 52 52 L 318 52 L 318 198 L 182 198 L 182 132 L 52 132 Z"/>
+            <path id="adv-poly-kitchen" class="interactive-poly" data-advzone="kitchen" role="button" tabindex="0" aria-label="Кухня-столовая — 28 м², остров, встроенная техника" d="M 322 52 L 548 52 L 548 198 L 322 198 Z"/>
+            <path id="adv-poly-master" class="interactive-poly" data-advzone="master" role="button" tabindex="0" aria-label="Master Bedroom — 32 м², en-suite, гардероб" d="M 322 202 L 548 202 L 548 398 L 322 398 Z"/>
 
             <!-- Labels -->
             <text id="lbl-living" x="165" y="175" text-anchor="middle" fill="rgba(255,255,255,0.3)" font-family="ui-monospace, monospace" font-size="11" letter-spacing="2">LIVING ROOM</text>
@@ -399,8 +514,31 @@
             <line x1="50" y1="420" x2="150" y2="420" stroke="rgba(255,255,255,0.25)" stroke-width="1"/>
             <text x="100" y="435" text-anchor="middle" fill="rgba(255,255,255,0.25)" font-family="ui-monospace, monospace" font-size="8">0 — 5 m</text>
           </svg>
+          </div>
         </div>
 
+      </div>
+    </div>
+  </section>
+
+  <!-- Investment Analytics -->
+  <section id="investment-metrics" class="bg-charcoal-900 py-16 px-8 border-t border-neutral-900/50">
+    <div class="max-w-7xl mx-auto">
+      <span class="font-sans text-xs uppercase tracking-[0.4em] text-neutral-500 block mb-6">Asset Analytics</span>
+      <h2 class="font-serif text-2xl md:text-3xl text-white font-light mb-10">Финансовые метрики актива</h2>
+      <div class="flex flex-col md:flex-row gap-px bg-neutral-800/30 border border-neutral-800/30" role="list">
+        <div class="metric-card" role="listitem" tabindex="0" aria-expanded="false" data-metric="roi">
+          <p class="font-serif text-lg text-white font-light">Прогнозируемый ROI: 12.4% годовых</p>
+          <p class="metric-explanation font-sans text-xs text-neutral-500 leading-relaxed">Расчёт на основе средней сезонной ставки аренды премиум-вилл Геленджика и текущих операционных расходов объекта.</p>
+        </div>
+        <div class="metric-card" role="listitem" tabindex="0" aria-expanded="false" data-metric="cap">
+          <p class="font-serif text-lg text-white font-light">Капитализация: +18% ежегодно</p>
+          <p class="metric-explanation font-sans text-xs text-neutral-500 leading-relaxed">Историческая динамика стоимости элитной недвижимости побережья за последние 5 лет с учётом инфраструктурного развития района.</p>
+        </div>
+        <div class="metric-card" role="listitem" tabindex="0" aria-expanded="false" data-metric="occ">
+          <p class="font-serif text-lg text-white font-light">Заполняемость: 84% в сезон</p>
+          <p class="metric-explanation font-sans text-xs text-neutral-500 leading-relaxed">Средняя загрузка аналогичных объектов в высокий сезон (июнь–сентябрь) по данным локального управляющего оператора.</p>
+        </div>
       </div>
     </div>
   </section>
@@ -507,9 +645,19 @@
         <p class="font-serif text-xl tracking-[0.2em] text-white mb-2">POSEIDON</p>
         <p class="font-sans text-xs text-neutral-500">© 2026 Villa Poseidon · Burgas Sochi</p>
       </div>
-      <p class="font-sans text-xs text-neutral-500">
-        Геленджик, ул. Жасминовая, 1 · +7 (862) 290-27-00
-      </p>
+      <div class="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-8">
+        <p class="font-sans text-xs text-neutral-500">
+          Геленджик, ул. Жасминовая, 1 · +7 (862) 290-27-00
+        </p>
+        <div id="concierge-wrap" class="relative">
+          <div id="concierge-tooltip" role="tooltip">
+            Прямой аудиозвонок консьерж-службе виллы. Позвонить одним нажатием — без приложений и регистрации.
+          </div>
+          <button type="button" id="concierge-btn" class="border border-neutral-700 px-5 py-2.5 font-sans text-[10px] uppercase tracking-widest text-white hover:bg-white hover:text-charcoal-900 transition-all duration-300 whitespace-nowrap" aria-describedby="concierge-tooltip">
+            Связаться с консьержем
+          </button>
+        </div>
+      </div>
     </div>
   </footer>
 
@@ -536,11 +684,15 @@
 
       const frameCount = 150;
 
+      /* ══════════════════════════════════════════════
+         CANVAS SCROLLYTELLING
+         ══════════════════════════════════════════════ */
       const canvas = document.getElementById('hero-canvas');
       const context = canvas.getContext('2d');
       const preloader = document.getElementById('preloader');
       const loaderText = document.getElementById('loader-text');
-      const loaderBar = document.getElementById('loader-bar');
+      const loaderVillaPath = document.getElementById('loader-villa-path');
+      const loaderVillaFill = document.getElementById('loader-villa-fill');
 
       const currentFramePath = (index) =>
         `public/frames/frame_${String(index).padStart(3, '0')}.webp`;
@@ -551,8 +703,16 @@
       let dpr = Math.min(window.devicePixelRatio || 1, 2);
       let scrollProgress = 0;
       let eveningRaf = null;
+      let pendingFrame = false;
+      let lastDrawnFrame = -1;
+      let needsCanvasRedraw = true;
 
       const eveningGlow = document.getElementById('evening-glow');
+      const VILLA_PATH_LEN = loaderVillaPath ? loaderVillaPath.getTotalLength() : 520;
+      if (loaderVillaPath) {
+        loaderVillaPath.style.strokeDasharray = String(VILLA_PATH_LEN);
+        loaderVillaPath.style.strokeDashoffset = String(VILLA_PATH_LEN);
+      }
 
       const textBlocks = [
         { el: document.getElementById('text-block-1'), start: 0, end: 0.25 },
@@ -568,7 +728,7 @@
         canvas.style.width = window.innerWidth + 'px';
         canvas.style.height = window.innerHeight + 'px';
         context.setTransform(dpr, 0, 0, dpr, 0, 0);
-        render();
+        scheduleRender(true);
       }
 
       function drawEveningLighting(cw, ch) {
@@ -610,7 +770,17 @@
         context.restore();
       }
 
-      function render() {
+      function updateLoaderProgress(pct) {
+        if (loaderText) loaderText.textContent = pct + '%';
+        if (loaderVillaPath) {
+          loaderVillaPath.style.strokeDashoffset = String(VILLA_PATH_LEN * (1 - pct / 100));
+        }
+        if (loaderVillaFill) {
+          loaderVillaFill.style.clipPath = `inset(${100 - pct}% 0 0 0)`;
+        }
+      }
+
+      function drawFrame() {
         const cw = window.innerWidth;
         const ch = window.innerHeight;
         context.clearRect(0, 0, cw, ch);
@@ -638,6 +808,25 @@
         if (scrollProgress >= 0.70) {
           drawEveningLighting(cw, ch);
         }
+        lastDrawnFrame = animation.frame;
+        needsCanvasRedraw = false;
+      }
+
+      function scheduleRender(force) {
+        if (force) needsCanvasRedraw = true;
+        if (pendingFrame) return;
+        pendingFrame = true;
+        requestAnimationFrame(() => {
+          pendingFrame = false;
+          if (needsCanvasRedraw || animation.frame !== lastDrawnFrame) {
+            drawFrame();
+          }
+        });
+      }
+
+      function render() {
+        needsCanvasRedraw = true;
+        scheduleRender();
       }
 
       function updateEveningGlow() {
@@ -652,7 +841,6 @@
           function tick() {
             if (scrollProgress >= 0.70) {
               updateEveningGlow();
-              render();
               eveningRaf = requestAnimationFrame(tick);
             } else {
               cancelAnimationFrame(eveningRaf);
@@ -682,7 +870,7 @@
 
       function initScrollAnimation() {
         resizeCanvas();
-        render();
+        scheduleRender(true);
 
         gsap.to(animation, {
           frame: frameCount - 1,
@@ -705,7 +893,7 @@
               });
             },
           },
-          onUpdate: render,
+          onUpdate: () => scheduleRender(),
         });
 
         updateTextBlocks(0);
@@ -718,8 +906,7 @@
         img.onload = () => {
           loadedImages++;
           const pct = Math.round((loadedImages / frameCount) * 100);
-          if (loaderText) loaderText.textContent = `LOADING... ${pct}%`;
-          if (loaderBar) loaderBar.style.width = pct + '%';
+          updateLoaderProgress(pct);
 
           if (loadedImages === frameCount) {
             preloader.setAttribute('aria-busy', 'false');
@@ -742,21 +929,64 @@
       let resizeTimer;
       window.addEventListener('resize', () => {
         clearTimeout(resizeTimer);
-        resizeTimer = setTimeout(resizeCanvas, 120);
+        resizeTimer = setTimeout(() => {
+          resizeCanvas();
+        }, 120);
       });
+
+      /* ══════════════════════════════════════════════
+         BOOKING FORM
+         ══════════════════════════════════════════════ */
+      const phoneInput = document.getElementById('phone');
+
+      function formatPhoneInput(value) {
+        const digits = value.replace(/\D/g, '');
+        let d = digits;
+        if (d.startsWith('8')) d = '7' + d.slice(1);
+        if (!d.startsWith('7')) d = '7' + d;
+        d = d.slice(0, 11);
+        let out = '+7';
+        if (d.length > 1) out += ' (' + d.slice(1, 4);
+        if (d.length >= 4) out += ') ' + d.slice(4, 7);
+        if (d.length >= 7) out += '-' + d.slice(7, 9);
+        if (d.length >= 9) out += '-' + d.slice(9, 11);
+        return out;
+      }
+
+      phoneInput.addEventListener('input', () => {
+        phoneInput.value = formatPhoneInput(phoneInput.value);
+        phoneInput.setSelectionRange(phoneInput.value.length, phoneInput.value.length);
+      });
+
+      function phoneDigits(value) {
+        return value.replace(/\D/g, '');
+      }
 
       document.getElementById('booking-form').addEventListener('submit', (e) => {
         e.preventDefault();
         const data = new FormData(e.target);
+        const dateHintEl = document.getElementById('date-hint');
+
         if (!data.get('checkin') || !data.get('checkout')) {
-          document.getElementById('date-hint').textContent = 'Выберите обе даты';
-          document.getElementById('date-hint').classList.add('text-red-400/80');
+          dateHintEl.textContent = 'Выберите обе даты';
+          dateHintEl.classList.add('text-red-400/80');
           return;
         }
+
+        const phone = data.get('phone');
+        const digits = phoneDigits(String(phone));
+        if (digits.length < 11) {
+          dateHintEl.textContent = 'Введите полный номер телефона';
+          dateHintEl.classList.add('text-red-400/80');
+          phoneInput.focus();
+          return;
+        }
+
+        dateHintEl.classList.remove('text-red-400/80');
         const subject = encodeURIComponent('Бронирование Villa Poseidon');
         const body = encodeURIComponent(
           `Имя: ${data.get('name')}\n` +
-          `Телефон: ${data.get('phone')}\n` +
+          `Телефон: ${phone}\n` +
           `Заезд: ${data.get('checkin')}\n` +
           `Выезд: ${data.get('checkout')}\n` +
           `Гостей: ${data.get('guests')}\n` +
@@ -844,7 +1074,9 @@
         }
       });
 
-      /* ── Advanced Architectural Floorplan ── */
+      /* ══════════════════════════════════════════════
+         ADVANCED FLOORPLAN
+         ══════════════════════════════════════════════ */
       const advancedZones = {
         living: { polyId: 'adv-poly-living', labelId: 'lbl-living' },
         kitchen: { polyId: 'adv-poly-kitchen', labelId: 'lbl-kitchen' },
@@ -858,11 +1090,13 @@
 
       const structuralWalls = document.getElementById('structural-walls');
       const architectBlueprint = document.getElementById('architect-blueprint');
-      const advBlueprintPanel = document.getElementById('adv-blueprint-panel');
+      const blueprintWrapper = document.getElementById('blueprint-wrapper');
       const btnFloor1 = document.getElementById('btn-floor-1');
       const btnFloor2 = document.getElementById('btn-floor-2');
       let activeAdvZone = null;
-      let currentFloor = 1;
+      let blueprintScale = 1;
+      const ZOOM_MIN = 0.8;
+      const ZOOM_MAX = 2.0;
 
       function getAdvPoly(zoneKey) {
         return document.getElementById(advancedZones[zoneKey].polyId);
@@ -870,6 +1104,10 @@
 
       function getAdvLabel(zoneKey) {
         return document.getElementById(advancedZones[zoneKey].labelId);
+      }
+
+      function applyBlueprintScale() {
+        blueprintWrapper.style.transform = 'scale(' + blueprintScale + ')';
       }
 
       function highlightAdvZone(zoneKey) {
@@ -881,11 +1119,16 @@
           const label = getAdvLabel(key);
           const isActive = key === zoneKey;
 
-          gsap.to(poly, { fillOpacity: isActive ? 0.05 : 0, duration: 0.35, ease: 'power2.out' });
-          gsap.to(label, { fill: isActive ? '#ffffff' : 'rgba(255,255,255,0.3)', duration: 0.35 });
+          poly.classList.toggle('active', isActive);
+          if (typeof gsap !== 'undefined') {
+            gsap.to(poly, { fillOpacity: isActive ? 0.05 : 0, duration: 0.35, ease: 'power2.out' });
+            gsap.to(label, { fill: isActive ? '#ffffff' : 'rgba(255,255,255,0.3)', duration: 0.35 });
+          }
         });
 
-        gsap.to(structuralWalls, { stroke: '#3d3d3d', duration: 0.35 });
+        if (typeof gsap !== 'undefined') {
+          gsap.to(structuralWalls, { stroke: '#3d3d3d', duration: 0.35 });
+        }
 
         document.querySelectorAll('.adv-zone-trigger').forEach((card) => {
           card.classList.toggle('active', card.dataset.advzone === zoneKey);
@@ -896,29 +1139,48 @@
         activeAdvZone = null;
 
         Object.keys(advancedZones).forEach((key) => {
-          gsap.to(getAdvPoly(key), { fillOpacity: 0, duration: 0.35, ease: 'power2.out' });
-          gsap.to(getAdvLabel(key), { fill: 'rgba(255,255,255,0.3)', duration: 0.35 });
+          const poly = getAdvPoly(key);
+          poly.classList.remove('active');
+          if (typeof gsap !== 'undefined') {
+            gsap.to(poly, { fillOpacity: 0, duration: 0.35, ease: 'power2.out' });
+            gsap.to(getAdvLabel(key), { fill: 'rgba(255,255,255,0.3)', duration: 0.35 });
+          }
         });
 
-        gsap.to(structuralWalls, { stroke: '#ffffff', duration: 0.35 });
+        if (typeof gsap !== 'undefined') {
+          gsap.to(structuralWalls, { stroke: '#ffffff', duration: 0.35 });
+        }
         document.querySelectorAll('.adv-zone-trigger').forEach((card) => card.classList.remove('active'));
       }
 
+      function bindZoneInteraction(el, zoneKey) {
+        el.addEventListener('mouseenter', () => highlightAdvZone(zoneKey));
+        el.addEventListener('focus', () => highlightAdvZone(zoneKey));
+        el.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            highlightAdvZone(zoneKey);
+          }
+        });
+      }
+
       document.querySelectorAll('.adv-zone-trigger').forEach((trigger) => {
-        trigger.addEventListener('mouseenter', () => highlightAdvZone(trigger.dataset.advzone));
+        bindZoneInteraction(trigger, trigger.dataset.advzone);
+        trigger.setAttribute('tabindex', '0');
+        trigger.setAttribute('role', 'button');
       });
 
       Object.keys(advancedZones).forEach((zoneKey) => {
-        const poly = getAdvPoly(zoneKey);
-        poly.addEventListener('mouseenter', () => highlightAdvZone(zoneKey));
+        bindZoneInteraction(getAdvPoly(zoneKey), zoneKey);
       });
 
       document.querySelector('#floorplan-advanced .grid').addEventListener('mouseleave', resetAdvZone);
+      document.querySelector('#floorplan-advanced .grid').addEventListener('focusout', (e) => {
+        if (!e.currentTarget.contains(e.relatedTarget)) resetAdvZone();
+      });
 
       function switchFloor(floorNumber) {
-        currentFloor = floorNumber;
         const labels = floorLabels[floorNumber];
-
         btnFloor1.classList.toggle('active', floorNumber === 1);
         btnFloor2.classList.toggle('active', floorNumber === 2);
 
@@ -929,7 +1191,7 @@
 
         resetAdvZone();
 
-        gsap.fromTo(architectBlueprint,
+        gsap.fromTo(blueprintWrapper,
           { opacity: 0, y: 12 },
           { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' }
         );
@@ -938,11 +1200,17 @@
       btnFloor1.addEventListener('click', () => switchFloor(1));
       btnFloor2.addEventListener('click', () => switchFloor(2));
 
-      advBlueprintPanel.addEventListener('mouseenter', () => {
-        gsap.to(architectBlueprint, { scale: 1.05, duration: 0.5, ease: 'power2.out', transformOrigin: 'center center' });
+      document.getElementById('zoom-in').addEventListener('click', () => {
+        blueprintScale = Math.min(ZOOM_MAX, blueprintScale * 1.1);
+        applyBlueprintScale();
       });
-      advBlueprintPanel.addEventListener('mouseleave', () => {
-        gsap.to(architectBlueprint, { scale: 1, duration: 0.5, ease: 'power2.out' });
+      document.getElementById('zoom-out').addEventListener('click', () => {
+        blueprintScale = Math.max(ZOOM_MIN, blueprintScale * 0.9);
+        applyBlueprintScale();
+      });
+      document.getElementById('zoom-reset').addEventListener('click', () => {
+        blueprintScale = 1;
+        applyBlueprintScale();
       });
 
       /* ScrollTrigger reveal for floorplan-advanced */
@@ -1068,6 +1336,37 @@
       }
 
       buildDateStrip();
+
+      /* ══════════════════════════════════════════════
+         INVESTMENT METRICS
+         ══════════════════════════════════════════════ */
+      document.querySelectorAll('.metric-card').forEach((card) => {
+        function toggleMetric() {
+          const wasExpanded = card.classList.contains('expanded');
+          document.querySelectorAll('.metric-card').forEach((c) => {
+            c.classList.remove('expanded');
+            c.setAttribute('aria-expanded', 'false');
+          });
+          if (!wasExpanded) {
+            card.classList.add('expanded');
+            card.setAttribute('aria-expanded', 'true');
+          }
+        }
+        card.addEventListener('click', toggleMetric);
+        card.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            toggleMetric();
+          }
+        });
+      });
+
+      /* ══════════════════════════════════════════════
+         CONCIERGE
+         ══════════════════════════════════════════════ */
+      document.getElementById('concierge-btn').addEventListener('click', () => {
+        window.location.href = 'tel:+78622902700';
+      });
     })();
   </script>
 </body>
